@@ -61,6 +61,9 @@ public class VNPayService {
         System.out.println("Expire Date: " + vnp_ExpireDate);
         System.out.println("Timezone: Asia/Ho_Chi_Minh");
 
+        // 🔒 CRITICAL: Remove vnp_SecureHash from params if it exists
+        vnp_Params.remove("vnp_SecureHash");
+
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
@@ -211,6 +214,9 @@ public class VNPayService {
         System.out.println("Create Date: " + vnp_CreateDate);
         System.out.println("Expire Date: " + vnp_ExpireDate);
         System.out.println("Timezone: Asia/Ho_Chi_Minh");
+
+        // 🔒 CRITICAL: Remove vnp_SecureHash from params if it exists
+        vnp_Params.remove("vnp_SecureHash");
 
         // Build query string và hash - FIX theo chuẩn VNPay
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
