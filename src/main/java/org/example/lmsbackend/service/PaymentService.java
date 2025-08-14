@@ -117,21 +117,16 @@ public class PaymentService {
     @Transactional
     public PaymentResponse confirmPayment(String transactionId, String status) {
         try {
-            System.out.println("🔧 confirmPayment called - TransactionId: " + transactionId + ", Status: " + status);
-            
             Optional<Payment> paymentOpt = paymentMapper.findPaymentByTransactionId(transactionId);
             if (paymentOpt.isEmpty()) {
-                System.out.println("❌ Payment not found for transactionId: " + transactionId);
                 return new PaymentResponse(false, "Không tìm thấy giao dịch");
             }
 
             Payment payment = paymentOpt.get();
-            System.out.println("✅ Payment found - ID: " + payment.getPaymentId() + ", Current Status: " + payment.getStatus());
 
             if ("success".equals(status)) {
                 // Cập nhật payment status thành completed
                 int updated = paymentMapper.updatePaymentStatusByTransactionId(transactionId, "completed");
-                System.out.println("✅ SUCCESS: Payment status updated, rows affected: " + updated);
                 
                 if (updated > 0) {
                     // Tự động đăng ký khóa học cho user
@@ -150,14 +145,11 @@ public class PaymentService {
                 }
             } else {
                 // Cập nhật payment status thành failed
-                System.out.println("❌ FAILED: Updating payment status to failed");
-                int updated = paymentMapper.updatePaymentStatusByTransactionId(transactionId, "failed");
-                System.out.println("❌ FAILED: Payment status updated, rows affected: " + updated);
+                paymentMapper.updatePaymentStatusByTransactionId(transactionId, "failed");
                 return new PaymentResponse(false, "Thanh toán thất bại");
             }
 
         } catch (Exception e) {
-            System.err.println("❌ confirmPayment Error: " + e.getMessage());
             e.printStackTrace();
             return new PaymentResponse(false, "Lỗi khi xác nhận thanh toán: " + e.getMessage());
         }
@@ -251,10 +243,6 @@ public class PaymentService {
                 // 🔧 FIX: Sử dụng Transaction ID từ database làm VNPay TxnRef để đồng bộ hóa
                 String paymentUrl = vnPayService.createOrderWithTxnRef(httpRequest, amount, orderInfo, returnUrl, payment.getTransactionId());
                 
-                System.out.println("✅ VNPay URL generated successfully");
-                System.out.println("Transaction ID: " + payment.getTransactionId());
-                System.out.println("Amount: " + amount + " (VND * 100)");
-                
                 return paymentUrl;
             } else {
                 // Fallback cho các method khác (momo, zalopay, credit_card)
@@ -283,32 +271,21 @@ public class PaymentService {
         try {
             int result = vnPayService.orderReturn(request);
             String transactionId = request.getParameter("vnp_TxnRef");
-            String responseCode = request.getParameter("vnp_ResponseCode");
-            String transactionStatus = request.getParameter("vnp_TransactionStatus");
-            
-            System.out.println("🔄 VNPay Callback - TxnRef: " + transactionId);
-            System.out.println("🔄 VNPay Callback - Result: " + result);
-            System.out.println("🔄 VNPay Callback - ResponseCode: " + responseCode);
-            System.out.println("🔄 VNPay Callback - TransactionStatus: " + transactionStatus);
             
             // 🔧 FIX: Lưu vnpayTxnRef vào database để đồng bộ hóa
             updatePaymentVnpayTxnRef(transactionId, transactionId);
             
             if (result == 1) {
                 // Thanh toán thành công
-                System.out.println("✅ Processing SUCCESS payment");
                 return confirmPayment(transactionId, "success");
             } else if (result == 0) {
                 // Thanh toán thất bại
-                System.out.println("❌ Processing FAILED payment");
                 return confirmPayment(transactionId, "failed");
             } else {
                 // Chữ ký không hợp lệ
-                System.out.println("🔐 Processing INVALID signature");
                 return new PaymentResponse(false, "Chữ ký không hợp lệ");
             }
         } catch (Exception e) {
-            System.err.println("❌ VNPay Callback Error: " + e.getMessage());
             e.printStackTrace();
             return new PaymentResponse(false, "Lỗi xử lý callback: " + e.getMessage());
         }
@@ -320,9 +297,8 @@ public class PaymentService {
     private void updatePaymentVnpayTxnRef(String transactionId, String vnpayTxnRef) {
         try {
             paymentMapper.updatePaymentVnpayTxnRef(transactionId, vnpayTxnRef);
-            System.out.println("✅ Updated vnpayTxnRef: " + vnpayTxnRef + " for transaction: " + transactionId);
         } catch (Exception e) {
-            System.err.println("❌ Failed to update vnpayTxnRef: " + e.getMessage());
+            System.err.println("Failed to update vnpayTxnRef: " + e.getMessage());
         }
     }
 
@@ -534,7 +510,6 @@ public class PaymentService {
             // Tự động enroll user vào khóa học
             try {
                 enrollmentsService.enrollUserInCourse(payment.getUserId(), payment.getCourseId());
-                System.out.println("✅ User " + payment.getUserId() + " enrolled in course " + payment.getCourseId());
             } catch (Exception e) {
                 System.err.println("❌ Auto enrollment failed: " + e.getMessage());
                 // Không return false vì payment đã thành công

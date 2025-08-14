@@ -56,11 +56,6 @@ public class VNPayService {
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate); // REQUIRED theo VNPay docs
 
-        System.out.println("🕐 VNPay Timezone Debug (createOrder):");
-        System.out.println("Create Date: " + vnp_CreateDate);
-        System.out.println("Expire Date: " + vnp_ExpireDate);
-        System.out.println("Timezone: Asia/Ho_Chi_Minh");
-
         // 🔒 CRITICAL: Remove vnp_SecureHash from params if it exists
         vnp_Params.remove("vnp_SecureHash");
 
@@ -102,13 +97,7 @@ public class VNPayService {
         }
         String queryUrl = query.toString();
         String vnp_SecureHash = VNPayUtil.hmacSHA512(vnPayConfig.getVnp_HashSecret(), hashData.toString());
-
-        System.out.println("🔐 VNPay Hash Debug (createOrder):");
-        System.out.println("Hash Data: " + hashData.toString());
-        System.out.println("Query URL: " + queryUrl.substring(0, Math.min(queryUrl.length(), 100)) + "...");
-        System.out.println("Hash Secret Length: " + vnPayConfig.getVnp_HashSecret().length());
-        System.out.println("Generated Hash: " + vnp_SecureHash.substring(0, 20) + "...");
-
+        
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = vnPayConfig.getVnp_PayUrl() + "?" + queryUrl;
         return paymentUrl;
@@ -125,9 +114,7 @@ public class VNPayService {
         }
 
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-        String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
         String vnp_TransactionStatus = request.getParameter("vnp_TransactionStatus");
-        String vnp_TxnRef = request.getParameter("vnp_TxnRef");
 
         // Remove security hash fields before calculating signature
         fields.remove("vnp_SecureHashType");
@@ -136,35 +123,16 @@ public class VNPayService {
         String signValue = VNPayUtil.hashAllFields(fields);
         String hashedSignValue = VNPayUtil.hmacSHA512(vnPayConfig.getVnp_HashSecret(), signValue);
 
-        // Debug logging
-        System.out.println("🔧 VNPay Debug - orderReturn:");
-        System.out.println("Transaction Ref: " + vnp_TxnRef);
-        System.out.println("Response Code: " + vnp_ResponseCode);
-        System.out.println("Transaction Status: " + vnp_TransactionStatus);
-        System.out.println("Received Hash: " + vnp_SecureHash);
-        System.out.println("Hash Data: " + signValue);
-        System.out.println("Calculated Hash: " + hashedSignValue);
-        System.out.println("Hash Match: " + hashedSignValue.equals(vnp_SecureHash));
-        System.out.println("Fields count: " + fields.size());
-        System.out.println("All fields:");
-        fields.forEach((key, value) -> System.out.println("  " + key + "=" + value));
-
         // Validate signature properly
         boolean signatureValid = hashedSignValue.equalsIgnoreCase(vnp_SecureHash);
-        System.out.println("🔐 Signature validation: " + (signatureValid ? "VALID" : "INVALID"));
 
         if (signatureValid) {
             if ("00".equals(vnp_TransactionStatus)) {
-                System.out.println("✅ Payment SUCCESS");
                 return 1; // Success
             } else {
-                System.out.println("❌ Payment FAILED - Status: " + vnp_TransactionStatus);
                 return 0; // Failed
             }
         } else {
-            System.out.println("❌ INVALID SIGNATURE");
-            System.out.println("Expected: " + hashedSignValue);
-            System.out.println("Received: " + vnp_SecureHash);
             return -1; // Invalid signature
         }
     }
@@ -180,11 +148,6 @@ public class VNPayService {
         String vnp_IpAddr = VNPayUtil.getIpAddress(request);
         String vnp_TmnCode = vnPayConfig.getVnp_TmnCode();
         String orderType = "other";
-
-        System.out.println("🔧 VNPay Sync TxnRef:");
-        System.out.println("Database Transaction ID: " + txnRef);
-        System.out.println("VNPay TxnRef: " + vnp_TxnRef);
-        System.out.println("TMN Code: " + vnp_TmnCode);
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", vnp_Version);
@@ -213,11 +176,6 @@ public class VNPayService {
         cld.add(Calendar.MINUTE, 30);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate); // REQUIRED theo VNPay docs
-
-        System.out.println("🕐 VNPay Timezone Debug (createOrderWithTxnRef):");
-        System.out.println("Create Date: " + vnp_CreateDate);
-        System.out.println("Expire Date: " + vnp_ExpireDate);
-        System.out.println("Timezone: Asia/Ho_Chi_Minh");
 
         // 🔒 CRITICAL: Remove vnp_SecureHash from params if it exists
         vnp_Params.remove("vnp_SecureHash");
@@ -262,16 +220,8 @@ public class VNPayService {
         String queryUrl = query.toString();
         String vnp_SecureHash = VNPayUtil.hmacSHA512(vnPayConfig.getVnp_HashSecret(), hashData.toString());
         
-        System.out.println("🔐 VNPay Hash Debug:");
-        System.out.println("Hash Data: " + hashData.toString());
-        System.out.println("Query URL: " + queryUrl.substring(0, Math.min(queryUrl.length(), 100)) + "...");
-        System.out.println("Hash Secret Length: " + vnPayConfig.getVnp_HashSecret().length());
-        System.out.println("Generated Hash: " + vnp_SecureHash.substring(0, 20) + "...");
-        
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = vnPayConfig.getVnp_PayUrl() + "?" + queryUrl;
-
-        System.out.println("🔗 Final VNPay URL: " + paymentUrl.substring(0, Math.min(paymentUrl.length(), 150)) + "...");
 
         return paymentUrl;
     }

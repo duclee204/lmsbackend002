@@ -15,10 +15,6 @@ public class VNPayUtil {
                 throw new NullPointerException("Key or data cannot be null");
             }
             
-            System.out.println("🔐 HMAC Debug:");
-            System.out.println("Key length: " + key.length());
-            System.out.println("Data: " + data);
-            
             final Mac hmac512 = Mac.getInstance("HmacSHA512");
             byte[] hmacKeyBytes = key.getBytes(StandardCharsets.UTF_8);
             final SecretKeySpec secretKey = new SecretKeySpec(hmacKeyBytes, "HmacSHA512");
@@ -29,9 +25,7 @@ public class VNPayUtil {
             for (byte b : result) {
                 sb.append(String.format("%02x", b & 0xff));
             }
-            String hash = sb.toString();
-            System.out.println("Generated HMAC: " + hash.substring(0, 20) + "...");
-            return hash;
+            return sb.toString();
         } catch (Exception ex) {
             System.err.println("HMAC Error: " + ex.getMessage());
             ex.printStackTrace();
@@ -127,11 +121,6 @@ public class VNPayUtil {
                 first = false;
             }
         }
-        
-        // Debug logging
-        System.out.println("🔧 hashAllFields Debug:");
-        System.out.println("Sorted fields: " + fieldNames);
-        System.out.println("Final hash string: " + sb.toString());
         
         return sb.toString();
     }
