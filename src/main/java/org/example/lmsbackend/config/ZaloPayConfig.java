@@ -21,7 +21,7 @@ public class ZaloPayConfig {
     @Value("${zalopay.callback.url:http://localhost:8080/api/payments/zalopay-callback}")
     private String callbackUrl;
 
-    @Value("${zalopay.redirect.url:http://localhost:4200/zalopay-callback}")
+    @Value("${zalopay.redirect.url:https://lms-frontend001-d43a1c85c11e.herokuapp.com/zalopay-callback}")
     private String redirectUrl;
 
     @Value("${zalopay.query.url:https://sb-openapi.zalopay.vn/v2/query}")

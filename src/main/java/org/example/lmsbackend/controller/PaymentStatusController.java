@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/payment-status")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/")
 public class PaymentStatusController {
 
     @Autowired

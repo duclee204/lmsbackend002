@@ -234,20 +234,20 @@ public class PaymentService {
                 return vnPayService.createOrderWithTxnRef(httpRequest, amount, orderInfo, returnUrl, payment.getTransactionId());
             } else {
                 // Fallback cho các method khác (momo, zalopay, credit_card)
-                return "http://localhost:4200/payment-gateway?transaction_id=" + payment.getTransactionId() +
-                       "&amount=" + payment.getAmount() + 
-                       "&method=" + payment.getPaymentMethod() +
-                       "&course_id=" + payment.getCourse().getCourseId() +
-                       "&return_url=http://localhost:4200/courses";
+          return "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-gateway?transaction_id=" + payment.getTransactionId() +
+              "&amount=" + payment.getAmount() + 
+              "&method=" + payment.getPaymentMethod() +
+              "&course_id=" + payment.getCourse().getCourseId() +
+              "&return_url=https://lms-frontend001-d43a1c85c11e.herokuapp.com/courses";
             }
         } catch (Exception e) {
             e.printStackTrace();
             // Fallback to mock gateway if VNPay fails
-            return "http://localhost:4200/payment-gateway?transaction_id=" + payment.getTransactionId() +
-                   "&amount=" + payment.getAmount() + 
-                   "&method=" + payment.getPaymentMethod() +
-                   "&course_id=" + payment.getCourse().getCourseId() +
-                   "&return_url=http://localhost:4200/courses";
+         return "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-gateway?transaction_id=" + payment.getTransactionId() +
+             "&amount=" + payment.getAmount() + 
+             "&method=" + payment.getPaymentMethod() +
+             "&course_id=" + payment.getCourse().getCourseId() +
+             "&return_url=https://lms-frontend001-d43a1c85c11e.herokuapp.com/courses";
         }
     }
 

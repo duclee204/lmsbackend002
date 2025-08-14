@@ -16,7 +16,7 @@ public class VNPayConfig {
     @Value("${vnpay.payUrl:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}")
     private String vnp_PayUrl;
     
-    @Value("${vnpay.returnUrl:http://localhost:4200/courses}")
+    @Value("${vnpay.returnUrl:https://lms-frontend001-d43a1c85c11e.herokuapp.com/courses}")
     private String vnp_ReturnUrl;
     
     @Value("${vnpay.apiUrl:https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}")

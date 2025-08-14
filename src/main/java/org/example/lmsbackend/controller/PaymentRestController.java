@@ -135,7 +135,7 @@ private BigDecimal parseBigDecimal(Object value) {
             String amount = request.getParameter("vnp_Amount");
             
             // Tạo URL redirect về frontend với query params
-            StringBuilder redirectUrl = new StringBuilder("http://localhost:4200/payment-success");
+            StringBuilder redirectUrl = new StringBuilder("https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success");
             redirectUrl.append("?vnp_ResponseCode=").append(responseCode);
             redirectUrl.append("&vnp_TxnRef=").append(transactionId);
             redirectUrl.append("&vnp_Amount=").append(amount);
@@ -151,7 +151,7 @@ private BigDecimal parseBigDecimal(Object value) {
         } catch (Exception e) {
             e.printStackTrace();
             // Redirect về frontend với error
-            String errorUrl = "http://localhost:4200/payment-success?success=false&message=Error";
+            String errorUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?success=false&message=Error";
             return new ModelAndView("redirect:" + errorUrl);
         }
     }
@@ -305,13 +305,13 @@ private BigDecimal parseBigDecimal(Object value) {
             String redirectUrl;
             if (result == 1) {
                 // Thanh toán thành công
-                redirectUrl = "http://localhost:4200/payment-success?status=success";
+                redirectUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=success";
             } else if (result == 0) {
                 // Thanh toán thất bại
-                redirectUrl = "http://localhost:4200/payment-success?status=failed";
+                redirectUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=failed";
             } else {
                 // Lỗi signature
-                redirectUrl = "http://localhost:4200/payment-success?status=error";
+                redirectUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=error";
             }
             
             // Redirect về frontend
@@ -320,7 +320,7 @@ private BigDecimal parseBigDecimal(Object value) {
         } catch (Exception e) {
             e.printStackTrace();
             try {
-                response.sendRedirect("http://localhost:4200/payment-success?status=error");
+                response.sendRedirect("https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=error");
             } catch (Exception ex) {
                 return ResponseEntity.status(500).body(Map.of("error", "Payment callback failed"));
             }

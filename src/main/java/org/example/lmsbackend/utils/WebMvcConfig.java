@@ -54,7 +54,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // Chỉ định origins cụ thể thay vì "*"
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+                configuration.setAllowedOrigins(Arrays.asList("https://lms-frontend001-d43a1c85c11e.herokuapp.com/"));
 
         // Cho phép tất cả methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
