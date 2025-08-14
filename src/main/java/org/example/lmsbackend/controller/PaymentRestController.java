@@ -304,6 +304,50 @@ private BigDecimal parseBigDecimal(Object value) {
     }
 
     /**
+     * VNPay payment callback API - Để frontend gọi và nhận JSON response
+     */
+    @GetMapping("/vnpay-payment-callback")
+    public ResponseEntity<?> vnpayPaymentCallback(HttpServletRequest request) {
+        try {
+            String transactionId = request.getParameter("vnp_TxnRef");
+            String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
+            String vnp_TransactionStatus = request.getParameter("vnp_TransactionStatus");
+            
+            // 🚨 TEMP DEBUG
+            System.out.println("=== Frontend Callback API Debug ===");
+            System.out.println("Transaction ID: " + transactionId);
+            System.out.println("vnp_ResponseCode: " + vnp_ResponseCode);
+            System.out.println("vnp_TransactionStatus: " + vnp_TransactionStatus);
+            
+            int result = vnPayService.orderReturn(request);
+            System.out.println("VNPayService.orderReturn() result: " + result);
+            
+            PaymentResponse paymentResponse;
+            if (result == 1) {
+                // Thanh toán thành công
+                System.out.println("→ Processing SUCCESS payment via API");
+                paymentResponse = paymentService.confirmPayment(transactionId, "success");
+            } else if (result == 0) {
+                // Thanh toán thất bại
+                System.out.println("→ Processing FAILED payment via API");
+                paymentResponse = paymentService.confirmPayment(transactionId, "failed");
+            } else {
+                // Lỗi signature
+                System.out.println("→ Processing SIGNATURE ERROR via API");
+                paymentResponse = new PaymentResponse(false, "Chữ ký không hợp lệ");
+            }
+            
+            return ResponseEntity.ok(paymentResponse);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Frontend callback API error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("success", false, "message", "Lỗi xử lý callback: " + e.getMessage()));
+        }
+    }
+
+    /**
      * VNPay return callback endpoint - xử lý khi user quay về từ VNPay
      */
     @GetMapping("/vnpay-payment/return")
