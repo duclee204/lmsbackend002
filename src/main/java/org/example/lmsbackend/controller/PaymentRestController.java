@@ -233,6 +233,15 @@ private BigDecimal parseBigDecimal(Object value) {
             HttpServletRequest httpRequest
     ) {
         try {
+            // Check VNPay configuration first
+            if (!vnPayService.isConfigValid()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "VNPay configuration is not properly set up",
+                    "configStatus", vnPayService.getConfigStatus()
+                ));
+            }
+
             Integer userId = userDetails.getUserId();
             
             // Extract parameters from request body with safe type conversion
@@ -334,13 +343,8 @@ private BigDecimal parseBigDecimal(Object value) {
     @GetMapping("/vnpay-config")
     public ResponseEntity<?> getVNPayConfig() {
         try {
-            return ResponseEntity.ok(Map.of(
-                "tmnCode", vnPayService.getTmnCode(),
-                "hashSecretLength", vnPayService.getHashSecret() != null ? vnPayService.getHashSecret().length() : 0,
-                "payUrl", vnPayService.getPayUrl(),
-                "returnUrl", vnPayService.getReturnUrl(),
-                "status", "active"
-            ));
+            Map<String, Object> configStatus = vnPayService.getConfigStatus();
+            return ResponseEntity.ok(configStatus);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));

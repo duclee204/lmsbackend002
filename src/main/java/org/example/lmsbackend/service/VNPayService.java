@@ -128,9 +128,9 @@ public class VNPayService {
         System.out.println("All fields:");
         fields.forEach((key, value) -> System.out.println("  " + key + "=" + value));
 
-        // 🧪 TEMPORARY: Skip signature validation for testing
+        // Validate signature properly
         boolean signatureValid = hashedSignValue.equalsIgnoreCase(vnp_SecureHash);
-        System.out.println("🧪 TESTING MODE: Signature validation bypassed");
+        System.out.println("🔐 Signature validation: " + (signatureValid ? "VALID" : "INVALID"));
 
         if (signatureValid) {
             if ("00".equals(vnp_TransactionStatus)) {
@@ -201,12 +201,12 @@ public class VNPayService {
             String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                // Build hash data string
+                // Build hash data string (NO URL encoding for hash)
                 hashData.append(fieldName);
                 hashData.append('=');
-                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
+                hashData.append(fieldValue);
 
-                // Build query string
+                // Build query string (WITH URL encoding for query)
                 query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8));
                 query.append('=');
                 query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
@@ -243,5 +243,31 @@ public class VNPayService {
 
     public String getReturnUrl() {
         return vnPayConfig.getVnp_ReturnUrl();
+    }
+
+    /**
+     * Validate VNPay configuration
+     */
+    public boolean isConfigValid() {
+        return vnPayConfig.getVnp_TmnCode() != null && !vnPayConfig.getVnp_TmnCode().isEmpty() &&
+               vnPayConfig.getVnp_HashSecret() != null && !vnPayConfig.getVnp_HashSecret().isEmpty() &&
+               vnPayConfig.getVnp_PayUrl() != null && !vnPayConfig.getVnp_PayUrl().isEmpty() &&
+               vnPayConfig.getVnp_ReturnUrl() != null && !vnPayConfig.getVnp_ReturnUrl().isEmpty();
+    }
+
+    /**
+     * Get configuration status for debugging
+     */
+    public Map<String, Object> getConfigStatus() {
+        Map<String, Object> status = new HashMap<>();
+        status.put("tmnCodeExists", vnPayConfig.getVnp_TmnCode() != null && !vnPayConfig.getVnp_TmnCode().isEmpty());
+        status.put("hashSecretExists", vnPayConfig.getVnp_HashSecret() != null && !vnPayConfig.getVnp_HashSecret().isEmpty());
+        status.put("payUrlExists", vnPayConfig.getVnp_PayUrl() != null && !vnPayConfig.getVnp_PayUrl().isEmpty());
+        status.put("returnUrlExists", vnPayConfig.getVnp_ReturnUrl() != null && !vnPayConfig.getVnp_ReturnUrl().isEmpty());
+        status.put("isValid", isConfigValid());
+        status.put("tmnCode", vnPayConfig.getVnp_TmnCode());
+        status.put("payUrl", vnPayConfig.getVnp_PayUrl());
+        status.put("returnUrl", vnPayConfig.getVnp_ReturnUrl());
+        return status;
     }
 }

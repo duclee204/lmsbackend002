@@ -45,6 +45,11 @@ public class PaymentService {
     @Transactional
     public PaymentResponse createPayment(Integer userId, PaymentRequest request, HttpServletRequest httpRequest) {
         try {
+            // 0. Validate VNPay config if using vnpay method
+            if ("vnpay".equals(request.getPaymentMethod()) && !vnPayService.isConfigValid()) {
+                return new PaymentResponse(false, "VNPay configuration is not properly set up. Please contact administrator.");
+            }
+
             // 1. Kiểm tra khóa học có tồn tại không
             Optional<Course> courseOpt = courseService.getCourseById(request.getCourseId());
             if (courseOpt.isEmpty()) {
@@ -224,6 +229,12 @@ public class PaymentService {
         try {
             // Chỉ sử dụng VNPay cho vnpay payment method
             if (payment.getPaymentMethod() == Payment.PaymentMethod.vnpay) {
+                // Validate VNPay config before generating URL
+                if (!vnPayService.isConfigValid()) {
+                    System.err.println("❌ VNPay config invalid - cannot generate payment URL");
+                    return null;
+                }
+
                 // 🔧 FIX: Chuyển đổi amount chính xác cho VNPay (VND * 100)
                 int amount = payment.getAmount().multiply(new BigDecimal("100")).intValue();
                 String orderInfo = "Thanh toan khoa hoc " + payment.getCourse().getCourseId();
@@ -231,7 +242,13 @@ public class PaymentService {
                 String returnUrl = null; // VNPayService sẽ dùng config default
                 
                 // 🔧 FIX: Sử dụng Transaction ID từ database làm VNPay TxnRef để đồng bộ hóa
-                return vnPayService.createOrderWithTxnRef(httpRequest, amount, orderInfo, returnUrl, payment.getTransactionId());
+                String paymentUrl = vnPayService.createOrderWithTxnRef(httpRequest, amount, orderInfo, returnUrl, payment.getTransactionId());
+                
+                System.out.println("✅ VNPay URL generated successfully");
+                System.out.println("Transaction ID: " + payment.getTransactionId());
+                System.out.println("Amount: " + amount + " (VND * 100)");
+                
+                return paymentUrl;
             } else {
                 // Fallback cho các method khác (momo, zalopay, credit_card)
                 return "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-gateway?transaction_id=" + payment.getTransactionId() +
@@ -241,6 +258,7 @@ public class PaymentService {
                        "&return_url=https://lms-frontend001-d43a1c85c11e.herokuapp.com/courses";
             }
         } catch (Exception e) {
+            System.err.println("❌ Error generating VNPay URL: " + e.getMessage());
             e.printStackTrace();
             // Fallback to mock gateway if VNPay fails
             return "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-gateway?transaction_id=" + payment.getTransactionId() +
