@@ -145,11 +145,29 @@ public class VNPayService {
             // Theo VNPay docs: 
             // vnp_ResponseCode: "00" = success, khác "00" = failed
             // vnp_TransactionStatus: "00" = success, khác "00" = failed
-            if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
+            
+            // Kiểm tra cả ResponseCode và TransactionStatus
+            boolean isSuccessResponse = "00".equals(vnp_ResponseCode);
+            boolean isSuccessTransaction = "00".equals(vnp_TransactionStatus);
+            
+            if (isSuccessResponse && isSuccessTransaction) {
                 System.out.println("→ RETURN: SUCCESS (1)");
                 return 1; // Success
             } else {
-                System.out.println("→ RETURN: FAILED (0) - ResponseCode: " + vnp_ResponseCode + ", TransactionStatus: " + vnp_TransactionStatus);
+                // Log chi tiết các mã lỗi để debug
+                System.out.println("→ RETURN: FAILED (0)");
+                System.out.println("  ResponseCode: " + vnp_ResponseCode + " (00=success)");
+                System.out.println("  TransactionStatus: " + vnp_TransactionStatus + " (00=success)");
+                
+                // Giải thích mã lỗi phổ biến
+                if ("24".equals(vnp_ResponseCode)) {
+                    System.out.println("  → User cancelled transaction");
+                } else if ("11".equals(vnp_ResponseCode)) {
+                    System.out.println("  → Payment timeout");
+                } else if ("51".equals(vnp_ResponseCode)) {
+                    System.out.println("  → Insufficient balance");
+                }
+                
                 return 0; // Failed
             }
         } else {
