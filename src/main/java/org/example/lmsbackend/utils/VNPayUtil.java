@@ -111,9 +111,19 @@ public class VNPayUtil {
                 if (!first) {
                     sb.append("&");
                 }
-                sb.append(fieldName);
-                sb.append("=");
-                sb.append(fieldValue);
+                
+                // ✅ URL encode both field name and value to match creation hash
+                try {
+                    sb.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()));
+                    sb.append("=");
+                    sb.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
+                } catch (UnsupportedEncodingException e) {
+                    // Fallback to non-encoded if error
+                    sb.append(fieldName);
+                    sb.append("=");
+                    sb.append(fieldValue);
+                }
+                
                 first = false;
             }
         }
