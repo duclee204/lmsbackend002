@@ -309,27 +309,43 @@ private BigDecimal parseBigDecimal(Object value) {
     @GetMapping("/vnpay-payment/return")
     public ResponseEntity<?> vnpayReturn(HttpServletRequest request, HttpServletResponse response) {
         try {
-            int result = vnPayService.orderReturn(request);
             String transactionId = request.getParameter("vnp_TxnRef");
+            String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
+            String vnp_TransactionStatus = request.getParameter("vnp_TransactionStatus");
+            
+            // 🚨 TEMP DEBUG
+            System.out.println("=== PaymentRestController Return Debug ===");
+            System.out.println("Transaction ID: " + transactionId);
+            System.out.println("vnp_ResponseCode: " + vnp_ResponseCode);
+            System.out.println("vnp_TransactionStatus: " + vnp_TransactionStatus);
+            
+            int result = vnPayService.orderReturn(request);
+            System.out.println("VNPayService.orderReturn() result: " + result);
             
             String redirectUrl;
             if (result == 1) {
                 // Thanh toán thành công - cập nhật DB và enroll user
+                System.out.println("→ Processing SUCCESS payment");
                 paymentService.confirmPayment(transactionId, "success");
                 redirectUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=success";
             } else if (result == 0) {
                 // Thanh toán thất bại - cập nhật DB status = failed
+                System.out.println("→ Processing FAILED payment");
                 paymentService.confirmPayment(transactionId, "failed");
                 redirectUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=failed";
             } else {
                 // Lỗi signature
+                System.out.println("→ Processing SIGNATURE ERROR");
                 redirectUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=error";
             }
+            
+            System.out.println("Final redirect URL: " + redirectUrl);
             
             // Redirect về frontend
             response.sendRedirect(redirectUrl);
             return null;
         } catch (Exception e) {
+            System.err.println("❌ Return callback error: " + e.getMessage());
             e.printStackTrace();
             try {
                 response.sendRedirect("https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=error");

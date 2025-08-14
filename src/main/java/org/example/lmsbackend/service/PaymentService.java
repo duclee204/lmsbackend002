@@ -117,16 +117,24 @@ public class PaymentService {
     @Transactional
     public PaymentResponse confirmPayment(String transactionId, String status) {
         try {
+            System.out.println("=== confirmPayment Debug ===");
+            System.out.println("Transaction ID: " + transactionId);
+            System.out.println("Status: " + status);
+            
             Optional<Payment> paymentOpt = paymentMapper.findPaymentByTransactionId(transactionId);
             if (paymentOpt.isEmpty()) {
+                System.out.println("❌ Payment not found in database");
                 return new PaymentResponse(false, "Không tìm thấy giao dịch");
             }
 
             Payment payment = paymentOpt.get();
+            System.out.println("✅ Found payment: ID=" + payment.getPaymentId() + ", current status=" + payment.getStatus());
 
             if ("success".equals(status)) {
+                System.out.println("→ Processing SUCCESS status");
                 // Cập nhật payment status thành completed
                 int updated = paymentMapper.updatePaymentStatusByTransactionId(transactionId, "completed");
+                System.out.println("Database update result: " + updated + " row(s) affected");
                 
                 if (updated > 0) {
                     // Tự động đăng ký khóa học cho user
@@ -144,12 +152,15 @@ public class PaymentService {
                     return new PaymentResponse(false, "Lỗi cập nhật trạng thái thanh toán");
                 }
             } else {
+                System.out.println("→ Processing FAILED status");
                 // Cập nhật payment status thành failed
-                paymentMapper.updatePaymentStatusByTransactionId(transactionId, "failed");
+                int updated = paymentMapper.updatePaymentStatusByTransactionId(transactionId, "failed");
+                System.out.println("Failed payment database update result: " + updated + " row(s) affected");
                 return new PaymentResponse(false, "Thanh toán thất bại");
             }
 
         } catch (Exception e) {
+            System.err.println("❌ confirmPayment error: " + e.getMessage());
             e.printStackTrace();
             return new PaymentResponse(false, "Lỗi khi xác nhận thanh toán: " + e.getMessage());
         }

@@ -114,7 +114,21 @@ public class VNPayService {
         }
 
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
+        String vnp_ResponseCode = request.getParameter("vnp_ResponseCode");
         String vnp_TransactionStatus = request.getParameter("vnp_TransactionStatus");
+        String vnp_TxnRef = request.getParameter("vnp_TxnRef");
+
+        // 🚨 TEMP DEBUG - Xem tất cả params để hiểu VNPay trả về gì
+        System.out.println("=== VNPay Return Debug ===");
+        System.out.println("vnp_ResponseCode: " + vnp_ResponseCode);
+        System.out.println("vnp_TransactionStatus: " + vnp_TransactionStatus);
+        System.out.println("vnp_TxnRef: " + vnp_TxnRef);
+        System.out.println("All params:");
+        fields.forEach((key, value) -> {
+            if (key.startsWith("vnp_")) {
+                System.out.println("  " + key + ": " + value);
+            }
+        });
 
         // Remove security hash fields before calculating signature
         fields.remove("vnp_SecureHashType");
@@ -125,14 +139,21 @@ public class VNPayService {
 
         // Validate signature properly
         boolean signatureValid = hashedSignValue.equalsIgnoreCase(vnp_SecureHash);
+        System.out.println("Signature valid: " + signatureValid);
 
         if (signatureValid) {
-            if ("00".equals(vnp_TransactionStatus)) {
+            // Theo VNPay docs: 
+            // vnp_ResponseCode: "00" = success, khác "00" = failed
+            // vnp_TransactionStatus: "00" = success, khác "00" = failed
+            if ("00".equals(vnp_ResponseCode) && "00".equals(vnp_TransactionStatus)) {
+                System.out.println("→ RETURN: SUCCESS (1)");
                 return 1; // Success
             } else {
+                System.out.println("→ RETURN: FAILED (0) - ResponseCode: " + vnp_ResponseCode + ", TransactionStatus: " + vnp_TransactionStatus);
                 return 0; // Failed
             }
         } else {
+            System.out.println("→ RETURN: INVALID SIGNATURE (-1)");
             return -1; // Invalid signature
         }
     }
