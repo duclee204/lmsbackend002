@@ -71,15 +71,14 @@ public class CourseRestController {
             item.put("price", course.getPrice());
             item.put("thumbnailUrl", course.getThumbnailUrl());
             item.put("createdAt", course.getCreatedAt());
-            item.put("categoryName", course.getCategoryName());
+            // Lấy category name từ relationship
+            if (course.getCategory() != null) {
+                item.put("categoryName", course.getCategory().getName());
+            }
             item.put("enrolled", enrolledCourseIds.contains(course.getCourseId()));
-            // Thêm thông tin đánh giá nếu có
-            if (course.getAverageRating() != null) {
-                item.put("averageRating", course.getAverageRating());
-            }
-            if (course.getTotalReviews() != null) {
-                item.put("totalReviews", course.getTotalReviews());
-            }
+            // TODO: Thêm thông tin đánh giá từ CourseReview service sau
+            // item.put("averageRating", averageRating);
+            // item.put("totalReviews", totalReviews);
             result.add(item);
         }
         return ResponseEntity.ok(result);
