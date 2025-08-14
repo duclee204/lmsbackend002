@@ -54,11 +54,11 @@ public class VNPayService {
         // 🕐 FIX: Tăng thời gian timeout lên 30 phút để tránh timeout
         cld.add(Calendar.MINUTE, 30);
         String vnp_ExpireDate = formatter.format(cld.getTime());
-        // vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate); // VNPay có thể không cần ExpireDate
+        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate); // REQUIRED theo VNPay docs
 
         System.out.println("🕐 VNPay Timezone Debug (createOrder):");
         System.out.println("Create Date: " + vnp_CreateDate);
-        System.out.println("Expire Date: " + vnp_ExpireDate + " (không sử dụng)");
+        System.out.println("Expire Date: " + vnp_ExpireDate);
         System.out.println("Timezone: Asia/Ho_Chi_Minh");
 
         // 🔒 CRITICAL: Remove vnp_SecureHash from params if it exists
@@ -208,11 +208,11 @@ public class VNPayService {
         // 🕐 FIX: Tăng thời gian timeout lên 30 phút để tránh timeout
         cld.add(Calendar.MINUTE, 30);
         String vnp_ExpireDate = formatter.format(cld.getTime());
-        // vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate); // VNPay có thể không cần ExpireDate
+        vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate); // REQUIRED theo VNPay docs
 
         System.out.println("🕐 VNPay Timezone Debug (createOrderWithTxnRef):");
         System.out.println("Create Date: " + vnp_CreateDate);
-        System.out.println("Expire Date: " + vnp_ExpireDate + " (không sử dụng)");
+        System.out.println("Expire Date: " + vnp_ExpireDate);
         System.out.println("Timezone: Asia/Ho_Chi_Minh");
 
         // 🔒 CRITICAL: Remove vnp_SecureHash from params if it exists
