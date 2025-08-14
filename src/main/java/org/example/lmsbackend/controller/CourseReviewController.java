@@ -40,6 +40,18 @@ public class CourseReviewController {
         }
     }
 
+    // Get reviews for a specific course (public - no authentication required)
+    @GetMapping("/public/course/{courseId}")
+    public ResponseEntity<List<CourseReviewDTO>> getPublicReviewsByCourse(@PathVariable Integer courseId) {
+        try {
+            List<CourseReviewDTO> reviews = courseReviewService.getReviewsByCourse(courseId);
+            return ResponseEntity.ok(reviews);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     // Get reviews for a specific course
     @GetMapping("/course/{courseId}")
     @PreAuthorize("hasRole('student') or hasRole('instructor') or hasRole('admin')")
