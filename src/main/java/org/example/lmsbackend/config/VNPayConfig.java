@@ -2,6 +2,7 @@ package org.example.lmsbackend.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import jakarta.annotation.PostConstruct;
 
 @Configuration
 public class VNPayConfig {
@@ -16,11 +17,22 @@ public class VNPayConfig {
     @Value("${vnpay.payUrl:https://sandbox.vnpayment.vn/paymentv2/vpcpay.html}")
     private String vnp_PayUrl;
     
-    @Value("${vnpay.returnUrl:https://lms-frontend001-d43a1c85c11e.herokuapp.com/courses}")
+    @Value("${vnpay.returnUrl:https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success}")
     private String vnp_ReturnUrl;
     
     @Value("${vnpay.apiUrl:https://sandbox.vnpayment.vn/merchant_webapi/api/transaction}")
     private String vnp_ApiUrl;
+    
+    @PostConstruct
+    public void init() {
+        System.out.println("🔧 VNPay Config Loaded:");
+        System.out.println("TMN Code: " + (vnp_TmnCode != null && !vnp_TmnCode.isEmpty() ? 
+            vnp_TmnCode.substring(0, Math.min(4, vnp_TmnCode.length())) + "***" : "EMPTY"));
+        System.out.println("Hash Secret: " + (vnp_HashSecret != null && !vnp_HashSecret.isEmpty() ? 
+            "***" + vnp_HashSecret.substring(Math.max(0, vnp_HashSecret.length()-4)) : "EMPTY"));
+        System.out.println("Pay URL: " + vnp_PayUrl);
+        System.out.println("Return URL: " + vnp_ReturnUrl);
+    }
     
     // Getters
     public String getVnp_TmnCode() {
