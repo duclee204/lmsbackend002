@@ -5,6 +5,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.example.lmsbackend.model.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -16,24 +17,28 @@ import java.util.function.Function;
 @Component
 public class JwtTokenUtil {
 
-    private static final String RAW_SECRET = "this_is_a_very_secure_secret_key_12345";
-    private static final SecretKey SECRET_KEY = Keys.hmacShaKeyFor(RAW_SECRET.getBytes());
+    private final SecretKey secretKey;
+
+    // Inject giá trị từ application.properties
+    public JwtTokenUtil(@Value("${jwt.secret}") String rawSecret) {
+        this.secretKey = Keys.hmacShaKeyFor(rawSecret.getBytes());
+    }
 
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", "ROLE_" + user.getRole());     // ✅ Thêm prefix "ROLE_"
-        claims.put("userId", user.getUserId());           // ✅ Đảm bảo không null
+        claims.put("role", "ROLE_" + user.getRole());
+        claims.put("userId", user.getUserId());
         claims.put("fullName", user.getFullName());
-       // claims.put("avatarUrl", user.getAvatarUrl());  // ✅ THÊM DÒNG NÀY// ✅ Thêm full name
         return createToken(claims, user.getUsername());
     }
+
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 giờ
+                .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -67,7 +72,7 @@ public class JwtTokenUtil {
 
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
