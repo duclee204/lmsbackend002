@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/users/login", "/api/users/register").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/api/courses/public").permitAll() // ✅ Cho phép truy cập public courses
                         .requestMatchers("/api/courses/list").hasAnyRole("admin", "instructor")
                         .requestMatchers("/api/enrollments/**").hasAnyRole("admin", "instructor", "student")
                         .requestMatchers("/api/course-reviews/**").hasAnyRole("admin", "instructor", "student")

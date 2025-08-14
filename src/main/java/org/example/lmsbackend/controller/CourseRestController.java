@@ -23,11 +23,38 @@ public class CourseRestController {
     @Autowired
     private org.example.lmsbackend.service.EnrollmentsService enrollmentsService;
 
+    // API public: lấy tất cả khóa học công khai (không cần đăng nhập)
+    @GetMapping("/public")
+    public ResponseEntity<List<Course>> getPublicCourses() {
+        try {
+            List<Course> courses = courseService.getCourses(null, null, "published");
+            return ResponseEntity.ok(courses);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(null);
+        }
+    }
+
     // API mới: trả về tất cả khóa học kèm trạng thái đã đăng ký
     @GetMapping("/all-with-status")
     @PreAuthorize("hasRole('student') or hasRole('admin') or hasRole('instructor')")
     public ResponseEntity<List<Map<String, Object>>> getAllCoursesWithStatus(@RequestParam int userId) {
-        List<Course> allCourses = courseService.getCourses(null, null, null);
+        // Sinh viên chỉ thấy khóa học đã xuất bản, admin/instructor thấy tất cả
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String statusFilter = null;
+        
+        if (principal instanceof CustomUserDetails customUser) {
+            boolean isStudent = customUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_student"));
+            
+            // Nếu là sinh viên, chỉ lấy khóa học đã xuất bản
+            if (isStudent) {
+                statusFilter = "published";
+            }
+            // Admin và instructor có thể thấy tất cả khóa học
+        }
+        
+        List<Course> allCourses = courseService.getCourses(null, null, statusFilter);
         // Lấy danh sách ID khóa học đã đăng ký
         List<org.example.lmsbackend.dto.EnrollmentsDTO> enrolled = enrollmentsService.getEnrolledCourses(userId);
         List<Integer> enrolledCourseIds = new java.util.ArrayList<>();
@@ -43,7 +70,16 @@ public class CourseRestController {
             item.put("description", course.getDescription());
             item.put("price", course.getPrice());
             item.put("thumbnailUrl", course.getThumbnailUrl());
+            item.put("createdAt", course.getCreatedAt());
+            item.put("categoryName", course.getCategoryName());
             item.put("enrolled", enrolledCourseIds.contains(course.getCourseId()));
+            // Thêm thông tin đánh giá nếu có
+            if (course.getAverageRating() != null) {
+                item.put("averageRating", course.getAverageRating());
+            }
+            if (course.getTotalReviews() != null) {
+                item.put("totalReviews", course.getTotalReviews());
+            }
             result.add(item);
         }
         return ResponseEntity.ok(result);
