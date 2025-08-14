@@ -12,10 +12,15 @@ public class VNPayUtil {
     public static String hmacSHA512(final String key, final String data) {
         try {
             if (key == null || data == null) {
-                throw new NullPointerException();
+                throw new NullPointerException("Key or data cannot be null");
             }
+            
+            System.out.println("🔐 HMAC Debug:");
+            System.out.println("Key length: " + key.length());
+            System.out.println("Data: " + data);
+            
             final Mac hmac512 = Mac.getInstance("HmacSHA512");
-            byte[] hmacKeyBytes = key.getBytes();
+            byte[] hmacKeyBytes = key.getBytes(StandardCharsets.UTF_8);
             final SecretKeySpec secretKey = new SecretKeySpec(hmacKeyBytes, "HmacSHA512");
             hmac512.init(secretKey);
             byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
@@ -24,8 +29,12 @@ public class VNPayUtil {
             for (byte b : result) {
                 sb.append(String.format("%02x", b & 0xff));
             }
-            return sb.toString();
+            String hash = sb.toString();
+            System.out.println("Generated HMAC: " + hash.substring(0, 20) + "...");
+            return hash;
         } catch (Exception ex) {
+            System.err.println("HMAC Error: " + ex.getMessage());
+            ex.printStackTrace();
             return "";
         }
     }
