@@ -304,19 +304,22 @@ private BigDecimal parseBigDecimal(Object value) {
     }
 
     /**
-     * VNPay return callback endpoint
+     * VNPay return callback endpoint - xử lý khi user quay về từ VNPay
      */
     @GetMapping("/vnpay-payment/return")
     public ResponseEntity<?> vnpayReturn(HttpServletRequest request, HttpServletResponse response) {
         try {
             int result = vnPayService.orderReturn(request);
+            String transactionId = request.getParameter("vnp_TxnRef");
             
             String redirectUrl;
             if (result == 1) {
-                // Thanh toán thành công
+                // Thanh toán thành công - cập nhật DB và enroll user
+                paymentService.confirmPayment(transactionId, "success");
                 redirectUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=success";
             } else if (result == 0) {
-                // Thanh toán thất bại
+                // Thanh toán thất bại - cập nhật DB status = failed
+                paymentService.confirmPayment(transactionId, "failed");
                 redirectUrl = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/payment-success?status=failed";
             } else {
                 // Lỗi signature

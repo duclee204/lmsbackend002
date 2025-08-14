@@ -30,15 +30,6 @@ public class VNPayIPNController {
         Map<String, String> response = new HashMap<>();
         
         try {
-            System.out.println("🔔 VNPay IPN received");
-            
-            // Log tất cả parameters
-            request.getParameterMap().forEach((key, values) -> {
-                if (key.startsWith("vnp_")) {
-                    System.out.println(key + ": " + values[0]);
-                }
-            });
-            
             // Lấy các tham số quan trọng
             String vnp_TxnRef = request.getParameter("vnp_TxnRef");
             String vnp_TransactionNo = request.getParameter("vnp_TransactionNo");
@@ -48,18 +39,10 @@ public class VNPayIPNController {
             String vnp_BankCode = request.getParameter("vnp_BankCode");
             String vnp_PayDate = request.getParameter("vnp_PayDate");
             
-            System.out.println("🔍 IPN Key Info:");
-            System.out.println("TxnRef: " + vnp_TxnRef);
-            System.out.println("TransactionNo: " + vnp_TransactionNo);
-            System.out.println("Amount: " + vnp_Amount);
-            System.out.println("ResponseCode: " + vnp_ResponseCode);
-            System.out.println("TransactionStatus: " + vnp_TransactionStatus);
-            
             // 1. Kiểm tra chữ ký
             int signatureResult = vnPayService.orderReturn(request);
             
             if (signatureResult != 1) {
-                System.out.println("❌ IPN: Invalid signature");
                 response.put("RspCode", "97");
                 response.put("Message", "Invalid signature");
                 return ResponseEntity.ok(response);
@@ -69,7 +52,6 @@ public class VNPayIPNController {
             boolean transactionExists = paymentService.checkTransactionExists(vnp_TxnRef);
             
             if (!transactionExists) {
-                System.out.println("❌ IPN: Transaction not found - " + vnp_TxnRef);
                 response.put("RspCode", "01");
                 response.put("Message", "Order not found");
                 return ResponseEntity.ok(response);
@@ -79,7 +61,6 @@ public class VNPayIPNController {
             boolean alreadyProcessed = paymentService.isTransactionProcessed(vnp_TxnRef);
             
             if (alreadyProcessed) {
-                System.out.println("✅ IPN: Transaction already processed - " + vnp_TxnRef);
                 response.put("RspCode", "02");
                 response.put("Message", "Order already confirmed");
                 return ResponseEntity.ok(response);
@@ -89,7 +70,6 @@ public class VNPayIPNController {
             boolean amountValid = paymentService.validateTransactionAmount(vnp_TxnRef, vnp_Amount);
             
             if (!amountValid) {
-                System.out.println("❌ IPN: Invalid amount for transaction - " + vnp_TxnRef);
                 response.put("RspCode", "04");
                 response.put("Message", "Invalid amount");
                 return ResponseEntity.ok(response);
@@ -106,7 +86,6 @@ public class VNPayIPNController {
                     vnp_BankCode, 
                     vnp_PayDate
                 );
-                System.out.println("✅ IPN: Payment SUCCESS for " + vnp_TxnRef);
             } else {
                 // Thanh toán thất bại
                 updateSuccess = paymentService.updatePaymentFailed(
@@ -114,17 +93,14 @@ public class VNPayIPNController {
                     vnp_ResponseCode, 
                     vnp_TransactionStatus
                 );
-                System.out.println("❌ IPN: Payment FAILED for " + vnp_TxnRef + " - Code: " + vnp_ResponseCode);
             }
             
             if (updateSuccess) {
                 response.put("RspCode", "00");
                 response.put("Message", "Confirm Success");
-                System.out.println("✅ IPN: Database updated successfully");
             } else {
                 response.put("RspCode", "99");
                 response.put("Message", "Database update failed");
-                System.out.println("❌ IPN: Database update failed");
             }
             
         } catch (Exception e) {
@@ -135,7 +111,6 @@ public class VNPayIPNController {
             response.put("Message", "Unknown error");
         }
         
-        System.out.println("🔔 IPN Response: " + response);
         return ResponseEntity.ok(response);
     }
 }
