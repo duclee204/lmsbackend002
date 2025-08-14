@@ -44,14 +44,22 @@ public class VNPayService {
         vnp_Params.put("vnp_ReturnUrl", finalReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        // 🌏 FIX: Sử dụng múi giờ Việt Nam (UTC+7) cho VNPay
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15);
+        // 🕐 FIX: Tăng thời gian timeout lên 30 phút để tránh timeout
+        cld.add(Calendar.MINUTE, 30);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+
+        System.out.println("🕐 VNPay Timezone Debug (createOrder):");
+        System.out.println("Create Date: " + vnp_CreateDate);
+        System.out.println("Expire Date: " + vnp_ExpireDate);
+        System.out.println("Timezone: Asia/Ho_Chi_Minh");
 
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
@@ -181,14 +189,22 @@ public class VNPayService {
         vnp_Params.put("vnp_ReturnUrl", finalReturnUrl);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        // 🌏 FIX: Sử dụng múi giờ Việt Nam (UTC+7) cho VNPay
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15);
+        // 🕐 FIX: Tăng thời gian timeout lên 30 phút để tránh timeout
+        cld.add(Calendar.MINUTE, 30);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
+
+        System.out.println("🕐 VNPay Timezone Debug (createOrderWithTxnRef):");
+        System.out.println("Create Date: " + vnp_CreateDate);
+        System.out.println("Expire Date: " + vnp_ExpireDate);
+        System.out.println("Timezone: Asia/Ho_Chi_Minh");
 
         // Build query string và hash
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
