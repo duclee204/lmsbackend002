@@ -51,6 +51,22 @@ public class Payment {
     @Column(name = "vnpay_txn_ref", length = 100)
     private String vnpayTxnRef;
 
+    // VNPay IPN fields
+    @Column(name = "vnpay_transaction_no", length = 50)
+    private String vnpayTransactionNo;
+    
+    @Column(name = "bank_code", length = 20)
+    private String bankCode;
+    
+    @Column(name = "pay_date", length = 14)
+    private String payDate;
+    
+    @Column(name = "vnpay_response_code", length = 2)
+    private String vnpayResponseCode;
+    
+    @Column(name = "vnpay_transaction_status", length = 2)
+    private String vnpayTransactionStatus;
+
     @Column(name = "payment_gateway_response", columnDefinition = "TEXT")
     private String paymentGatewayResponse;
 

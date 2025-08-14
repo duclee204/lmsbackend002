@@ -447,5 +447,113 @@ public class PaymentService {
     public Map<String, Object> getZaloPayConfig() {
         return zaloPayService.getConfig();
     }
+
+    // ========== VNPay IPN Methods ==========
+    
+    /**
+     * Kiểm tra transaction có tồn tại không
+     */
+    public boolean checkTransactionExists(String vnp_TxnRef) {
+        try {
+            Payment payment = paymentMapper.findByVnpayTxnRef(vnp_TxnRef);
+            return payment != null;
+        } catch (Exception e) {
+            System.err.println("Error checking transaction exists: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Kiểm tra transaction đã được xử lý chưa
+     */
+    public boolean isTransactionProcessed(String vnp_TxnRef) {
+        try {
+            Payment payment = paymentMapper.findByVnpayTxnRef(vnp_TxnRef);
+            if (payment == null) return false;
+            
+            // Kiểm tra status khác pending
+            return payment.getStatus() != Payment.Status.pending;
+        } catch (Exception e) {
+            System.err.println("Error checking transaction processed: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Kiểm tra amount có khớp không
+     */
+    public boolean validateTransactionAmount(String vnp_TxnRef, String vnp_Amount) {
+        try {
+            Payment payment = paymentMapper.findByVnpayTxnRef(vnp_TxnRef);
+            if (payment == null) return false;
+            
+            // VNPay trả về amount * 100, payment.amount đã * 100 rồi
+            Long vnpayAmount = Long.parseLong(vnp_Amount);
+            Long paymentAmount = payment.getAmount().multiply(new BigDecimal(100)).longValue();
+            
+            return vnpayAmount.equals(paymentAmount);
+        } catch (Exception e) {
+            System.err.println("Error validating transaction amount: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Cập nhật thanh toán thành công
+     */
+    @Transactional
+    public boolean updatePaymentSuccess(String vnp_TxnRef, String vnp_TransactionNo, 
+                                       String vnp_BankCode, String vnp_PayDate) {
+        try {
+            Payment payment = paymentMapper.findByVnpayTxnRef(vnp_TxnRef);
+            if (payment == null) return false;
+            
+            // Cập nhật payment status
+            payment.setStatus(Payment.Status.completed);
+            payment.setVnpayTransactionNo(vnp_TransactionNo);
+            payment.setBankCode(vnp_BankCode);
+            payment.setPayDate(vnp_PayDate);
+            
+            paymentMapper.updatePaymentStatus(payment);
+            
+            // Tự động enroll user vào khóa học
+            try {
+                enrollmentsService.enrollUserInCourse(payment.getUserId(), payment.getCourseId());
+                System.out.println("✅ User " + payment.getUserId() + " enrolled in course " + payment.getCourseId());
+            } catch (Exception e) {
+                System.err.println("❌ Auto enrollment failed: " + e.getMessage());
+                // Không return false vì payment đã thành công
+            }
+            
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error updating payment success: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Cập nhật thanh toán thất bại
+     */
+    @Transactional
+    public boolean updatePaymentFailed(String vnp_TxnRef, String vnp_ResponseCode, 
+                                      String vnp_TransactionStatus) {
+        try {
+            Payment payment = paymentMapper.findByVnpayTxnRef(vnp_TxnRef);
+            if (payment == null) return false;
+            
+            // Cập nhật payment status
+            payment.setStatus(Payment.Status.failed);
+            payment.setVnpayResponseCode(vnp_ResponseCode);
+            payment.setVnpayTransactionStatus(vnp_TransactionStatus);
+            
+            paymentMapper.updatePaymentStatus(payment);
+            
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error updating payment failed: " + e.getMessage());
+            return false;
+        }
+    }
 }
 
