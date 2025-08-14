@@ -79,10 +79,14 @@ public class VNPayService {
                     query.append('&');
                 }
 
-                //Build hash data (NO URL encoding for hash)
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(fieldValue);
+                //Build hash data (WITH URL encoding để match VNPay expectation)
+                try {
+                    hashData.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()));
+                    hashData.append('=');
+                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 //Build query (WITH URL encoding for query)
                 try {
@@ -233,15 +237,23 @@ public class VNPayService {
                     query.append('&');
                 }
                 
-                // Build hash data string (NO URL encoding for hash)
-                hashData.append(fieldName);
-                hashData.append('=');
-                hashData.append(fieldValue);
+                // Build hash data string (WITH URL encoding để match VNPay)
+                try {
+                    hashData.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()));
+                    hashData.append('=');
+                    hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
                 // Build query string (WITH URL encoding for query)
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8));
-                query.append('=');
-                query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8));
+                try {
+                    query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8.toString()));
+                    query.append('=');
+                    query.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8.toString()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 
                 first = false;
             }
