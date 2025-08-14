@@ -29,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
         System.out.println("🔍 JWT Filter - Auth header: " + authHeader);
+        System.out.println("🔍 JWT Filter - Request URI: " + request.getRequestURI());
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             System.out.println("❌ JWT Filter - No valid auth header");
@@ -36,35 +37,47 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String token = authHeader.substring(7);
-        String username = jwtTokenUtil.extractUsername(token);
-        String role = jwtTokenUtil.extractRole(token);
-        Integer userId = jwtTokenUtil.extractUserId(token);
-        
-        System.out.println("🔍 JWT Filter - Extracted username: " + username);
-        System.out.println("🔍 JWT Filter - Extracted role: " + role);
-        System.out.println("🔍 JWT Filter - Extracted userId: " + userId);
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            List<SimpleGrantedAuthority> authorities = List.of(
-                    new SimpleGrantedAuthority(role)  // ✅ Không thêm "ROLE_" vì đã có trong token
-            );
+        try {
+            String token = authHeader.substring(7);
+            String username = jwtTokenUtil.extractUsername(token);
+            String role = jwtTokenUtil.extractRole(token);
+            Integer userId = jwtTokenUtil.extractUserId(token);
             
-            System.out.println("🔍 JWT Filter - Created authorities: " + authorities);
+            System.out.println("🔍 JWT Filter - Extracted username: " + username);
+            System.out.println("🔍 JWT Filter - Extracted role: " + role);
+            System.out.println("🔍 JWT Filter - Extracted userId: " + userId);
 
-            CustomUserDetails customUserDetails = new CustomUserDetails(
-                    userId,
-                    username,
-                    null,
-                    authorities
-            );
+            // Check if token is expired
+            if (jwtTokenUtil.isTokenExpired(token)) {
+                System.out.println("❌ JWT Filter - Token is expired");
+                filterChain.doFilter(request, response);
+                return;
+            }
 
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    customUserDetails, null, customUserDetails.getAuthorities()
-            );
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                List<SimpleGrantedAuthority> authorities = List.of(
+                        new SimpleGrantedAuthority(role)  // ✅ Không thêm "ROLE_" vì đã có trong token
+                );
+                
+                System.out.println("🔍 JWT Filter - Created authorities: " + authorities);
 
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            System.out.println("✅ JWT Filter - Authentication set successfully");
+                CustomUserDetails customUserDetails = new CustomUserDetails(
+                        userId,
+                        username,
+                        null,
+                        authorities
+                );
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        customUserDetails, null, customUserDetails.getAuthorities()
+                );
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+                System.out.println("✅ JWT Filter - Authentication set successfully");
+            }
+        } catch (Exception e) {
+            System.err.println("❌ JWT Filter - Error processing token: " + e.getMessage());
+            e.printStackTrace();
         }
 
         filterChain.doFilter(request, response);

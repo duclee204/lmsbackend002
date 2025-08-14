@@ -14,7 +14,10 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-            .allowedOrigins("https://lms-frontend001-d43a1c85c11e.herokuapp.com/")
+            .allowedOrigins(
+                "https://lms-frontend001-d43a1c85c11e.herokuapp.com",
+                "http://localhost:4200"
+            )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

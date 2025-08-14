@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "https://lms-frontend001-d43a1c85c11e.herokuapp.com/", allowCredentials = "true")
+@CrossOrigin(origins = {"https://lms-frontend001-d43a1c85c11e.herokuapp.com", "http://localhost:4200"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/module-progress")
 public class ModuleProgressController {
