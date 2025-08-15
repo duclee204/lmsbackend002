@@ -25,10 +25,19 @@ public class CloudinaryService {
      */
     public String uploadFile(MultipartFile file, String folder, String resourceType) {
         try {
-            // Generate unique public_id
+            // Generate unique public_id với extension
             String originalFilename = file.getOriginalFilename();
-            String filename = originalFilename != null ? 
-                originalFilename.substring(0, originalFilename.lastIndexOf('.')) : "file";
+            String extension = "";
+            String filename = "file";
+            
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf('.'));
+                filename = originalFilename.substring(0, originalFilename.lastIndexOf('.'));
+            } else if (originalFilename != null) {
+                filename = originalFilename;
+            }
+            
+            // Tạo public_id với extension để đảm bảo file type được giữ lại
             String publicId = folder + "/" + UUID.randomUUID().toString() + "_" + filename;
 
             // Upload options
@@ -38,6 +47,27 @@ public class CloudinaryService {
                 "resource_type", resourceType,
                 "folder", folder
             );
+            
+            // Đối với documents (.doc, .docx, .pdf), đảm bảo format được set đúng
+            if ("raw".equals(resourceType)) {
+                if (!extension.isEmpty()) {
+                    // Set format dựa vào extension
+                    String format = extension.substring(1).toLowerCase(); // Bỏ dấu chấm và chuyển thành chữ thường
+                    uploadOptions.put("format", format);
+                    
+                    // Đặc biệt xử lý cho các file Word
+                    if ("docx".equals(format)) {
+                        uploadOptions.put("format", "docx");
+                    } else if ("doc".equals(format)) {
+                        uploadOptions.put("format", "doc");
+                    }
+                }
+                
+                // Đảm bảo file name có extension trong public_id
+                if (!extension.isEmpty()) {
+                    publicId = publicId + extension;
+                }
+            }
 
             // Special options for videos
             if ("video".equals(resourceType)) {
@@ -58,7 +88,20 @@ public class CloudinaryService {
             @SuppressWarnings("unchecked")
             Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), uploadOptions);
             
-            return uploadResult.get("secure_url").toString();
+            String uploadUrl = uploadResult.get("secure_url").toString();
+            
+            // Đối với raw files, đảm bảo URL có extension chính xác
+            if ("raw".equals(resourceType) && !extension.isEmpty() && !uploadUrl.endsWith(extension)) {
+                // Nếu Cloudinary không tự động thêm extension, thêm vào manually
+                if (!uploadUrl.contains("." + extension.substring(1))) {
+                    // Log để debug
+                    System.out.println("Original filename: " + originalFilename);
+                    System.out.println("Extension: " + extension);
+                    System.out.println("Upload URL: " + uploadUrl);
+                }
+            }
+            
+            return uploadUrl;
             
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload file to Cloudinary: " + e.getMessage(), e);
@@ -83,7 +126,17 @@ public class CloudinaryService {
      * Upload document (PDF, DOC, etc.)
      */
     public String uploadDocument(MultipartFile file, String folder) {
-        return uploadFile(file, folder, "raw");
+        System.out.println("=== Upload Document Debug ===");
+        System.out.println("Original filename: " + file.getOriginalFilename());
+        System.out.println("Content type: " + file.getContentType());
+        System.out.println("File size: " + file.getSize() + " bytes");
+        
+        String result = uploadFile(file, folder, "raw");
+        
+        System.out.println("Final Cloudinary URL: " + result);
+        System.out.println("=== End Upload Debug ===");
+        
+        return result;
     }
 
     /**
