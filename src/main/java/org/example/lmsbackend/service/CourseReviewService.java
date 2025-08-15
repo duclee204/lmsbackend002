@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -218,5 +221,29 @@ public class CourseReviewService {
         dto.setCreatedAt(review.getCreatedAt());
         dto.setHasReviewed(true);
         return dto;
+    }
+
+    // Method to get rating statistics for a course
+    public Map<String, Object> getCourseRatingStats(Integer courseId) {
+        List<CourseReview> reviews = courseReviewRepository.findByCourseId(courseId);
+        
+        Map<String, Object> stats = new HashMap<>();
+        
+        if (reviews.isEmpty()) {
+            stats.put("averageRating", 0.0);
+            stats.put("totalReviews", 0);
+            return stats;
+        }
+        
+        // Calculate average rating
+        double averageRating = reviews.stream()
+            .mapToInt(CourseReview::getRating)
+            .average()
+            .orElse(0.0);
+        
+        stats.put("averageRating", Math.round(averageRating * 10.0) / 10.0); // Round to 1 decimal place
+        stats.put("totalReviews", reviews.size());
+        
+        return stats;
     }
 }

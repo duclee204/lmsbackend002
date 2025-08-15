@@ -3,6 +3,7 @@ package org.example.lmsbackend.controller;
 import org.example.lmsbackend.model.Course;
 import org.example.lmsbackend.dto.CourseDTO;
 import org.example.lmsbackend.service.CourseService;
+import org.example.lmsbackend.service.CourseReviewService;
 import org.example.lmsbackend.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,6 +26,9 @@ public class CourseRestController {
     @Autowired
     private org.example.lmsbackend.service.EnrollmentsService enrollmentsService;
 
+    @Autowired
+    private CourseReviewService courseReviewService;
+
     // API public: lấy tất cả khóa học công khai (không cần đăng nhập)
     @GetMapping("/public")
     public ResponseEntity<List<Course>> getPublicCourses() {
@@ -32,6 +38,42 @@ public class CourseRestController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(null);
+        }
+    }
+
+    // API public với rating stats: lấy tất cả khóa học công khai kèm đánh giá
+    @GetMapping("/public-with-ratings")
+    public ResponseEntity<List<Map<String, Object>>> getPublicCoursesWithRatings() {
+        try {
+            List<Course> courses = courseService.getCourses(null, null, "published");
+            List<Map<String, Object>> result = new ArrayList<>();
+            
+            for (Course course : courses) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("courseId", course.getCourseId());
+                item.put("title", course.getTitle());
+                item.put("description", course.getDescription());
+                item.put("price", course.getPrice());
+                item.put("thumbnailUrl", course.getThumbnailUrl());
+                item.put("createdAt", course.getCreatedAt());
+                item.put("instructorId", course.getInstructorId());
+                
+                // Add category name
+                if (course.getCategory() != null) {
+                    item.put("categoryName", course.getCategory().getName());
+                }
+                
+                // Add rating statistics
+                Map<String, Object> ratingStats = courseReviewService.getCourseRatingStats(course.getCourseId());
+                item.put("averageRating", ratingStats.get("averageRating"));
+                item.put("totalReviews", ratingStats.get("totalReviews"));
+                
+                result.add(item);
+            }
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -76,9 +118,12 @@ public class CourseRestController {
                 item.put("categoryName", course.getCategory().getName());
             }
             item.put("enrolled", enrolledCourseIds.contains(course.getCourseId()));
-            // TODO: Thêm thông tin đánh giá từ CourseReview service sau
-            // item.put("averageRating", averageRating);
-            // item.put("totalReviews", totalReviews);
+            
+            // Add rating statistics
+            Map<String, Object> ratingStats = courseReviewService.getCourseRatingStats(course.getCourseId());
+            item.put("averageRating", ratingStats.get("averageRating"));
+            item.put("totalReviews", ratingStats.get("totalReviews"));
+            
             result.add(item);
         }
         return ResponseEntity.ok(result);
