@@ -174,6 +174,13 @@ public class PaymentService {
     }
 
     /**
+     * Lấy tất cả thanh toán (chỉ dành cho admin)
+     */
+    public List<PaymentDTO> getAllPayments() {
+        return paymentMapper.getAllPayments();
+    }
+
+    /**
      * Lấy danh sách thanh toán của khóa học (cho instructor/admin)
      */
     public List<PaymentDTO> getPaymentsByCourse(Integer courseId) {

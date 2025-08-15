@@ -54,9 +54,11 @@ public interface PaymentMapper {
     List<PaymentDTO> getPaymentsByUserId(Integer userId);
 
     @Select("SELECT p.payment_id, p.user_id, p.course_id, c.title as course_title, " +
+            "u.username as user_name, u.email as user_email, " +
             "p.amount, p.status, p.payment_method, p.transaction_id, p.created_at, p.paid_at " +
             "FROM payments p " +
             "JOIN courses c ON p.course_id = c.course_id " +
+            "JOIN users u ON p.user_id = u.user_id " +
             "WHERE p.course_id = #{courseId} " +
             "ORDER BY p.created_at DESC")
     @Results({
@@ -64,12 +66,35 @@ public interface PaymentMapper {
             @Result(property = "userId", column = "user_id"),
             @Result(property = "courseId", column = "course_id"),
             @Result(property = "courseTitle", column = "course_title"),
+            @Result(property = "userName", column = "user_name"),
+            @Result(property = "userEmail", column = "user_email"),
             @Result(property = "paymentMethod", column = "payment_method"),
             @Result(property = "transactionId", column = "transaction_id"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "paidAt", column = "paid_at")
     })
     List<PaymentDTO> getPaymentsByCourseId(Integer courseId);
+
+    @Select("SELECT p.payment_id, p.user_id, p.course_id, c.title as course_title, " +
+            "u.username as user_name, u.email as user_email, " +
+            "p.amount, p.status, p.payment_method, p.transaction_id, p.created_at, p.paid_at " +
+            "FROM payments p " +
+            "JOIN courses c ON p.course_id = c.course_id " +
+            "JOIN users u ON p.user_id = u.user_id " +
+            "ORDER BY p.created_at DESC")
+    @Results({
+            @Result(property = "paymentId", column = "payment_id"),
+            @Result(property = "userId", column = "user_id"),
+            @Result(property = "courseId", column = "course_id"),
+            @Result(property = "courseTitle", column = "course_title"),
+            @Result(property = "userName", column = "user_name"),
+            @Result(property = "userEmail", column = "user_email"),
+            @Result(property = "paymentMethod", column = "payment_method"),
+            @Result(property = "transactionId", column = "transaction_id"),
+            @Result(property = "createdAt", column = "created_at"),
+            @Result(property = "paidAt", column = "paid_at")
+    })
+    List<PaymentDTO> getAllPayments();
 
     @Select("SELECT * FROM payments WHERE transaction_id = #{transactionId}")
     @Results({

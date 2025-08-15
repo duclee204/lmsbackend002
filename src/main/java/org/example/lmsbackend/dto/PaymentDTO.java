@@ -8,6 +8,8 @@ public class PaymentDTO {
     private Integer userId;
     private Integer courseId;
     private String courseTitle;
+    private String userName;
+    private String userEmail;
     private BigDecimal amount;
     private String status;
     private String paymentMethod;
@@ -63,6 +65,22 @@ public class PaymentDTO {
 
     public void setCourseTitle(String courseTitle) {
         this.courseTitle = courseTitle;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 
     public BigDecimal getAmount() {

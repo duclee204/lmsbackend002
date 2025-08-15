@@ -175,6 +175,23 @@ private BigDecimal parseBigDecimal(Object value) {
     }
 
     /**
+     * Lấy tất cả thanh toán (chỉ dành cho admin)
+     */
+    @GetMapping("/admin/all-payments")
+    @PreAuthorize("hasRole('admin')")
+    public ResponseEntity<?> getAllPayments(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            List<PaymentDTO> payments = paymentService.getAllPayments();
+            return ResponseEntity.ok(payments);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi khi lấy tất cả lịch sử thanh toán: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Lấy danh sách thanh toán của khóa học (cho instructor và admin)
      */
     @GetMapping("/course/{courseId}")
